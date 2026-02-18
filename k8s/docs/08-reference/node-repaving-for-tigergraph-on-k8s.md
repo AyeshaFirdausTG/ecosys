@@ -142,60 +142,67 @@ In this section, we demonstrate how to repave a node in Amazon EKS using a manag
     export NAMESPACE=<YOUR_NAMESPACE>
     export STORAGE_CLASS=<YOUR_STORAGE_CLASS>
 
-    cat <<EOF | kubectl apply -f -
-    apiVersion: graphdb.tigergraph.com/v1alpha1
-    kind: TigerGraph
-    metadata:
-    name: ${CLUSTER_NAME}
-    namespace: ${NAMESPACE}
-    spec:
-    ha: 2
-    image: docker.io/tigergraph/tigergraph-k8s:4.2.1
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets:
+    #!/bin/bash
+
+export CLUSTER_NAME=<YOUR_CLUSTER_NAME>
+export LICENSE=<YOUR_LICENSE>
+export NAMESPACE=<YOUR_NAMESPACE>
+export STORAGE_CLASS=<YOUR_STORAGE_CLASS>
+
+cat <<EOF | kubectl apply -f -
+apiVersion: graphdb.tigergraph.com/v1alpha1
+kind: TigerGraph
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  ha: 2
+  image: docker.io/tigergraph/tigergraph-k8s:4.2.1
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
     - name: tigergraph-image-pull-secret
-    license: ${LICENSE}
-    listener:
-        type: LoadBalancer
-    privateKeyName: ssh-key-secret
-    replicas: 4
-    resources:
-        limits:
-        cpu: 6
-        memory: 12
-        requests:
-        cpu: 6
-        memory: 12
-    securityContext:
-        privileged: false
-        runAsGroup: 1000
-        runAsUser: 1000
-    storage:
-        type: persistent-claim
-        volumeClaimTemplate:
-        accessModes:
+  license: ${LICENSE}
+  listener:
+    type: LoadBalancer
+  privateKeyName: ssh-key-secret
+  replicas: 4
+  resources:
+    limits:
+      cpu: "6"
+      memory: "12Gi"
+    requests:
+      cpu: "6"
+      memory: "12Gi"
+  securityContext:
+    privileged: false
+    runAsGroup: 1000
+    runAsUser: 1000
+  storage:
+    type: persistent-claim
+    volumeClaimTemplate:
+      accessModes:
         - ReadWriteOnce
-        resources:
-            requests:
-            storage: 100G
-        storageClassName: ${STORAGE_CLASS}
-        volumeMode: Filesystem
-    topologySpreadConstraints:
-        - maxSkew: 1
-            topologyKey: topology.kubernetes.io/zone
-            whenUnsatisfiable: DoNotSchedule #ScheduleAnyway
-            labelSelector:
-            matchLabels:
-                tigergraph.com/cluster-pod: ${CLUSTER_NAME}
-            matchLabelKeys:
-            - pod-template-hash
-        - maxSkew: 1
-            topologyKey: "kubernetes.io/hostname"
-            whenUnsatisfiable: DoNotSchedule #ScheduleAnyway
-            labelSelector:
-            matchLabels:
-                tigergraph.com/cluster-pod: ${CLUSTER_NAME}
-    EOF
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: ${STORAGE_CLASS}
+      volumeMode: Filesystem
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          tigergraph.com/cluster-pod: ${CLUSTER_NAME}
+      matchLabelKeys:
+        - pod-template-hash
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          tigergraph.com/cluster-pod: ${CLUSTER_NAME}
+EOF
     ```
 
 - Ensure Cluster is in Normal Status
